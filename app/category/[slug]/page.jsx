@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   try {
-    const slug = params.slug;
+    const { slug } = await params;
     const { data } = await getCategoryWithProducts(slug);
     if (!data || !data.category) {
       return { title: "Category Not Found" };
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function CategoryProductsPage({ params }) {
-  const { slug } = params;
+  const { slug } = await params;
   let pageData;
 
   try {

@@ -4,29 +4,28 @@
 
 import { useState, useEffect, useTransition } from "react";
 import Image from "next/image";
-import { useAuth } from "@/app/Context/AuthContext"; // (1) استيراد useAuth
-import { useCart } from "@/app/Context/CartContext"; // (2) استيراد useCart
-import { addToCart as addToCartAPI } from "@/lib/user"; // (3) استيراد دالة الـ API
+import Link from "next/link";
+import { useAuth } from "@/app/Context/AuthContext";
+import { useCart } from "@/app/Context/CartContext";
+import { addToCart as addToCartAPI } from "@/lib/user";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import StarRating from "../_components/StarRating";
-import { ShoppingCart, Minus, Plus } from "lucide-react";
-import { toast } from "sonner"; // (4) لاستخدام التنبيهات
+import { ShoppingCart, Minus, Plus, ChevronRight, LayoutGrid } from "lucide-react";
+import { toast } from "sonner";
 
-// Helper to parse colors/sizes which might be comma-separated strings in an array
 const parseOptions = (options) => {
   if (!options) return [];
   return options
     .flatMap((opt) => opt.split(","))
     .map((s) => s.trim())
-    .filter(Boolean); // This will filter out empty strings
+    .filter(Boolean);
 };
 
 const ProductDetailsClient = ({ product }) => {
-  const { user, getValidToken } = useAuth(); // (5) الحصول على المستخدم والتوكن
-  const { addToCart: addToCartContext } = useCart(); // (6) الحصول على دالة السلة المحلية;
-  const [isPending, startTransition] = useTransition(); // (7) لإدارة حالة التحميل
+  const { user, getValidToken } = useAuth();
+  const { addToCart: addToCartContext } = useCart();
+  const [isPending, startTransition] = useTransition();
 
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState(null);
@@ -36,7 +35,6 @@ const ProductDetailsClient = ({ product }) => {
   const colors = parseOptions(product.color);
   const sizes = parseOptions(product.size);
 
-  // Set default selections
   useEffect(() => {
     if (colors.length > 0 && !selectedColor) setSelectedColor(colors[0]);
     if (sizes.length > 0 && !selectedSize) setSelectedSize(sizes[0]);
@@ -47,40 +45,21 @@ const ProductDetailsClient = ({ product }) => {
   };
 
   const handleAddToCart = async () => {
-    // Basic validation
     if (product.stock === 0) {
       toast.error("This product is out of stock.");
       return;
     }
-    if (sizes.length > 0 && !selectedSize) {
-      toast.warning("Please select a size.");
-      return;
-    }
-    if (colors.length > 0 && !selectedColor) {
-      toast.warning("Please select a color.");
-      return;
-    }
-
     startTransition(async () => {
       try {
         if (user) {
-          // (8) المستخدم مسجل: استدعاء الـ API
-          await addToCartAPI(getValidToken, {
-            productId: product._id,
-            quantity: quantity,
-          });
-          // Also update the local cart context to keep UI in sync
+          await addToCartAPI(getValidToken, { productId: product._id, quantity });
           addToCartContext(product, quantity, selectedColor, selectedSize);
-          toast.success(`${quantity} x ${product.title} added to your cart.`);
+          toast.success("Secured in your bag.");
         } else {
-          // (9) المستخدم زائر: استخدام السلة المحلية (localStorage)
           addToCartContext(product, quantity, selectedColor, selectedSize);
-          toast.success(`${quantity} x ${product.title} added to cart!`);
+          toast.success("Added to bag!");
         }
-        // ملاحظة: قد تحتاج إلى تحديث حالة السلة العامة (CartContext) بعد استدعاء الـ API
-        // لتعكس التغييرات فورًا في أيقونة السلة في الـ Header.
       } catch (error) {
-        console.error("Failed to add to cart:", error);
         toast.error(error.message || "Something went wrong.");
       }
     });
@@ -90,179 +69,158 @@ const ProductDetailsClient = ({ product }) => {
     style: "currency",
     currency: product.currency || "EGP",
   }).format(product.price);
+  
   let salePrice;
   if (product.isOnSale && product.discountPercent > 0) {
-    const discountedAmount = product.price * (product.discountPercent / 100);
     salePrice = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: product.currency || "EGP",
-    }).format(product.price - discountedAmount);
+    }).format(product.price * (1 - product.discountPercent / 100));
   }
-
-  const stockStatus = () => {
-    if (product.stock === 0) {
-      return <Badge variant="destructive">Out of Stock</Badge>;
-    }
-    if (product.stock < 10) {
-      return (
-        <Badge className="bg-orange-500 text-white">
-          Low Stock ({product.stock} left)
-        </Badge>
-      );
-    }
-    return <Badge className="bg-green-600 text-white">In Stock</Badge>;
-  };
 
   const allImages = [product.coverImage, ...(product.images || [])];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-      {/* Image Gallery */}
-      <div className="flex flex-col gap-4">
-        <Card className="overflow-hidden">
-          <CardContent className="p-0">
-            <div className="relative w-full aspect-square">
-              <Image
-                src={mainImage}
-                alt={product.title}
-                fill
-                className="object-contain"
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
+    <div className="bg-white min-h-screen">
+      {/* 1. ULTRA-SLIM WHITE HEADER - الهيدر الصغير جداً وبنفس لون الموقع */}
+      <section className="bg-white border-b border-zinc-100 py-4 mb-6">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-row justify-between items-center">
+            <div className="flex items-center gap-6">
+               <h1 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-black leading-none">
+                Asset<span className="text-zinc-200">.</span>Overview
+              </h1>
+              <div className="hidden md:block h-4 w-[1px] bg-zinc-100" />
+              <nav className="hidden md:flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-zinc-300">
+                <Link href="/" className="hover:text-black transition-colors">Home</Link>
+                <ChevronRight size={8} />
+                <Link href="/products" className="hover:text-black transition-colors">Shop</Link>
+                <ChevronRight size={8} />
+                <span className="text-black italic underline">Detail</span>
+              </nav>
             </div>
-          </CardContent>
-        </Card>
-        <div className="grid grid-cols-5 gap-2">
-          {allImages.map((image, index) => (
-            <button
-              key={image.public_id || index}
-              className={`relative aspect-square rounded-md overflow-hidden border-2 ${
-                mainImage === image.url
-                  ? "border-primary"
-                  : "border-transparent"
-              }`}
-              onClick={() => setMainImage(image.url)}
-            >
-              <Image
-                src={image.url}
-                alt={`Thumbnail ${index + 1}`}
-                fill
-                className="object-cover"
-                sizes="20vw"
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Product Details & Actions */}
-      <div className="flex flex-col gap-4">
-        <div>
-          {product.brand && (
-            <p className="text-sm text-gray-500 mb-1">{product.brand}</p>
-          )}
-          <h1 className="text-3xl lg:text-4xl font-bold">{product.title}</h1>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center">
-            <StarRating rating={product.averageRating} />
-            <span className="text-gray-600 ml-2 text-sm">
-              ({product.numReviews} reviews)
-            </span>
+            
+            <div className="flex items-center gap-2 text-zinc-400">
+              <LayoutGrid size={12} />
+              <span className="text-[8px] font-black uppercase tracking-widest">v2.0_Interface</span>
+            </div>
           </div>
-          <span className="text-sm text-gray-500">|</span>
-          {stockStatus()}
         </div>
+      </section>
 
-        <div className="flex items-baseline gap-2">
-          <p
-            className={`font-bold text-3xl ${
-              salePrice ? "text-red-600" : "text-gray-900"
-            }`}
-          >
-            {salePrice || originalPrice}
-          </p>
-          {salePrice && (
-            <p className="text-lg text-gray-500 line-through">
-              {originalPrice}
+      <div className="container mx-auto px-6 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          
+          {/* 2. Visual Gallery */}
+          <div className="lg:col-span-7 flex flex-col gap-6">
+            <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-zinc-50 border border-zinc-100 group">
+              <Image src={mainImage} alt={product.title} fill className="object-contain p-10 transition-transform duration-700 group-hover:scale-105" priority />
+              {product.isOnSale && (
+                <div className="absolute top-6 right-6 bg-black text-white px-3 py-1 rounded-full text-[8px] font-black italic tracking-widest">
+                  SALE {product.discountPercent}%
+                </div>
+              )}
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {allImages.map((image, index) => (
+                <button
+                  key={index}
+                  className={`relative flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all ${
+                    mainImage === image.url ? "border-black scale-95 shadow-sm" : "border-transparent opacity-40 hover:opacity-100"
+                  }`}
+                  onClick={() => setMainImage(image.url)}
+                >
+                  <Image src={image.url} alt="Gallery" fill className="object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 3. Product Details */}
+          <div className="lg:col-span-5 flex flex-col pt-2 h-full">
+            <div className="mb-6">
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-300 block mb-2">
+                Brand // {product.brand || "Velocore"}
+              </span>
+              <h2 className="text-4xl font-black uppercase tracking-tighter text-zinc-900 leading-[0.85] mb-4">
+                {product.title}
+              </h2>
+              <div className="flex items-center gap-4 py-3 border-y border-zinc-50">
+                <StarRating rating={product.averageRating} />
+                <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">
+                  {product.numReviews} Verified Reviews
+                </span>
+              </div>
+            </div>
+
+            <div className="mb-8">
+              <div className="flex items-baseline gap-3">
+                <span className={`text-6xl font-black italic tracking-tighter leading-none ${salePrice ? "text-red-600" : "text-black"}`}>
+                  {salePrice || originalPrice}
+                </span>
+                {salePrice && (
+                  <span className="text-xl text-zinc-200 line-through font-bold italic tracking-tight">{originalPrice}</span>
+                )}
+              </div>
+            </div>
+
+            <p className="text-zinc-400 text-sm leading-relaxed mb-10 font-medium max-w-sm">
+              {product.description}
             </p>
-          )}
-        </div>
 
-        <p className="text-gray-700 leading-relaxed">{product.description}</p>
+            {/* Config & Action */}
+            <div className="space-y-10 mt-auto">
+              {sizes.length > 0 && (
+                <div className="space-y-4">
+                  <label className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-300">Selected Option</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {sizes.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                          selectedSize === size ? "bg-black text-white border-black shadow-lg" : "bg-white text-zinc-300 border-zinc-100 hover:border-zinc-300"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-        {/* Size Options */}
-        {sizes.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold">Size:</label>
-            <div className="flex gap-2 flex-wrap">
-              {sizes.map((size) => (
-                <Button
-                  key={size}
-                  variant={selectedSize === size ? "default" : "outline"}
-                  onClick={() => setSelectedSize(size)}
-                >
-                  {size}
-                </Button>
-              ))}
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center bg-zinc-50 rounded-2xl p-1 border border-zinc-100">
+                    <button className="p-2 hover:text-black transition-colors" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}><Minus size={14}/></button>
+                    <span className="w-10 text-center font-black text-sm italic">{quantity}</span>
+                    <button className="p-2 hover:text-black transition-colors" onClick={() => handleQuantityChange(1)} disabled={quantity >= product.stock}><Plus size={14}/></button>
+                  </div>
+                  
+                  <Button 
+                    onClick={handleAddToCart}
+                    disabled={product.stock === 0 || isPending}
+                    className="flex-grow py-8 bg-black text-white rounded-[1.5rem] hover:bg-zinc-800 transition-all shadow-xl shadow-black/5 group"
+                  >
+                    <div className="flex items-center justify-center gap-3">
+                      <ShoppingCart size={18} />
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+                        {isPending ? "Syncing..." : "Add to Core Bag"}
+                      </span>
+                    </div>
+                  </Button>
+                </div>
+                
+                <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-[0.4em] text-zinc-300 pt-4 border-t border-zinc-50">
+                   <span>Ref: {product.sku || "V-TERM-01"}</span>
+                   <span className={product.stock > 0 ? "text-green-500" : "text-red-500"}>
+                     {product.stock > 0 ? "Asset Available" : "Asset Depleted"}
+                   </span>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-
-        {/* Color Options */}
-        {colors.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold">Color:</label>
-            <div className="flex gap-2 flex-wrap">
-              {colors.map((color) => (
-                <Button
-                  key={color}
-                  variant={selectedColor === color ? "default" : "outline"}
-                  onClick={() => setSelectedColor(color)}
-                >
-                  {color}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Quantity & Add to Cart */}
-        <div className="flex items-center gap-4 mt-4">
-          <div className="flex items-center border rounded-md">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleQuantityChange(-1)}
-              disabled={quantity <= 1}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="w-12 text-center font-semibold">{quantity}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleQuantityChange(1)}
-              disabled={quantity >= product.stock}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button
-            size="lg"
-            className="flex-grow"
-            onClick={handleAddToCart}
-            disabled={product.stock === 0 || isPending}
-          >
-            <ShoppingCart className="mr-2 h-5 w-5" />
-            {isPending ? "Adding..." : "Add to Cart"}
-          </Button>
         </div>
-        {product.sku && (
-          <p className="text-xs text-gray-500 mt-2">SKU: {product.sku}</p>
-        )}
       </div>
     </div>
   );

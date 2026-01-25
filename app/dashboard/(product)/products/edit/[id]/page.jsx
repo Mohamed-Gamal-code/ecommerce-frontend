@@ -15,9 +15,9 @@ import ProductForm from "../../../_components/ProductForm";
 
 const EditproductPage = () => {
   const [product, setProduct] = useState(null);
-  const [categories, setCategories] = useState([]); // 3. State لتخزين الأقسام
-  const [isLoading, setIsLoading] = useState(true); // لمعرفة هل البيانات قيد التحميل
+  const [categories, setCategories] = useState([]); 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
   const params = useParams();

@@ -2,21 +2,31 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useCart } from "../Context/CartContext";
 import { useAuth } from "../Context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import { createOrder } from "@/lib/order";
 import { toast } from "sonner";
+import {
+  ShieldCheck,
+  Truck,
+  CreditCard,
+  ArrowLeft,
+  ShoppingBag,
+} from "lucide-react";
+import Link from "next/link";
 
 const CheckoutPage = () => {
-  const { cart, total, clearCart } = useCart();
+  const { cart, clearCart } = useCart();
   const { user, token } = useAuth();
   const router = useRouter();
+
+  const total = useMemo(
+    () => cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    [cart]
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -45,12 +55,14 @@ const CheckoutPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
-      toast.error("You must be logged in to place an order.");
+      toast.error("Please login to complete your order.");
       router.push("/login");
       return;
     }
 
     setIsSubmitting(true);
+    const toastId = toast.loading("Processing your VELOCORE order...");
+
     try {
       const orderData = {
         shippingInfo: {
@@ -67,18 +79,15 @@ const CheckoutPage = () => {
           size: item.size,
         })),
         totalPrice: total,
-        paymentInfo: {
-          status: "pending", // Or integrate with a real payment provider
-        },
+        paymentInfo: { status: "pending" },
       };
 
       const data = await createOrder(orderData, token);
-      toast.success("Order placed successfully!");
+      toast.success("Order Placed Successfully", { id: toastId });
       clearCart();
       router.push(`/order/confirmation?orderId=${data.order._id}`);
     } catch (error) {
-      console.error("Failed to create order:", error);
-      toast.error(error.message || "There was an issue placing your order.");
+      toast.error(error.message || "Checkout failed", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -86,125 +95,163 @@ const CheckoutPage = () => {
 
   if (cart.length === 0 && !isSubmitting) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-3xl font-bold mb-4">Your Cart is Empty</h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-8">
-          You can't checkout with an empty cart.
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6">
+        <div className="w-20 h-20 bg-zinc-50 rounded-full flex items-center justify-center mb-6">
+          <ShoppingBag className="text-zinc-300" size={32} />
+        </div>
+        <h1 className="text-2xl font-black uppercase tracking-tighter mb-2 text-black">
+          Cart is Empty.
+        </h1>
+        <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-8">
+          Curation incomplete.
         </p>
-        <Button onClick={() => router.push("/products")}>
-          Continue Shopping
-        </Button>
+        <Link
+          href="/products"
+          className="px-8 py-4 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-800 transition-all"
+        >
+          Return to Library
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Checkout</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                Shipping Information
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="123 Main St"
-                    disabled={isSubmitting}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="zip">ZIP Code</Label>
-                  <Input
-                    id="zip"
-                    value={formData.zip}
-                    onChange={handleInputChange}
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                Payment Information
-              </h2>
-              <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
-                <p className="text-gray-600 dark:text-gray-300">
-                  This is a demo. No real payment will be processed.
-                </p>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting || cart.length === 0}
+    <div className="min-h-screen bg-white text-black font-sans pb-24">
+      <div className="max-w-7xl mx-auto px-6 pt-16">
+        
+        {/* Header - التعديل هنا: ملموم واحترافي جداً */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-16 border-b border-zinc-100 pb-8">
+          <div className="space-y-1">
+            <Link
+              href="/cart"
+              className="group flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400 hover:text-black transition-all"
             >
-              {isSubmitting ? "Placing Order..." : "Place Order"}
-            </Button>
-          </form>
+              <ArrowLeft size={10} className="group-hover:-translate-x-1 transition-transform" />
+              Review Cart
+            </Link>
+            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-black">
+              Checkout <span className="text-zinc-200 italic font-medium">Process.</span>
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-3 px-4 py-2 bg-zinc-50 rounded-full border border-zinc-100">
+            <ShieldCheck size={16} className="text-zinc-400" />
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+              Secured Checkout Active
+            </span>
+          </div>
         </div>
-        <div className="lg:col-span-1">
-          <div className="border rounded-lg p-6 sticky top-24">
-            <h2 className="text-xl font-bold mb-4">Order Summary</h2>
-            <div className="space-y-2">
-              {cart.map((item) => (
-                <div
-                  key={`${item._id}-${item.size}-${item.color}`}
-                  className="flex justify-between text-sm"
-                >
-                  <span className="truncate pr-2">
-                    {item.title} x {item.quantity}
-                  </span>
-                  <span>
-                    {formatPrice(item.price * item.quantity, item.currency)}
-                  </span>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+          {/* Left: Forms */}
+          <div className="lg:col-span-7 space-y-16">
+            <form onSubmit={handleSubmit} id="checkout-form" className="space-y-16">
+              
+              {/* Shipping Section */}
+              <section className="space-y-10">
+                <div className="flex items-center gap-4">
+                  <span className="text-2xl font-black text-zinc-100 italic">01</span>
+                  <h2 className="text-[11px] font-black uppercase tracking-[0.3em] border-b border-black pb-1">
+                    Shipping Logistics
+                  </h2>
                 </div>
-              ))}
-            </div>
-            <div className="border-t pt-4 mt-4 flex justify-between font-bold text-lg">
-              <span>Total</span>
-              <span>{formatPrice(total, cart[0]?.currency)}</span>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                  {[
+                    { id: "name", label: "Full Name", type: "text" },
+                    { id: "email", label: "Email Address", type: "email" },
+                    { id: "address", label: "Street Address", type: "text", full: true },
+                    { id: "city", label: "City", type: "text" },
+                    { id: "zip", label: "ZIP / Postal Code", type: "text" },
+                  ].map((field) => (
+                    <div key={field.id} className={`${field.full ? "md:col-span-2" : ""} group`}>
+                      <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2 block transition-colors group-focus-within:text-black">
+                        {field.label}
+                      </label>
+                      <input
+                        id={field.id}
+                        type={field.type}
+                        value={formData[field.id]}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full bg-white border-b border-zinc-200 focus:border-black py-3 outline-none transition-all font-medium text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Payment Mockup */}
+              <section className="space-y-8 pt-6">
+                <div className="flex items-center gap-4">
+                  <span className="text-2xl font-black text-zinc-100 italic"></span>
+                  <h2 className="text-[11px] font-black uppercase tracking-[0.3em] border-b border-black pb-1">
+                    Payment Method
+                  </h2>
+                </div>
+              
+              </section>
+            </form>
+          </div>
+
+          {/* Right: Summary Card */}
+          <div className="lg:col-span-5 lg:sticky lg:top-12">
+            <div className="bg-black text-white rounded-[2.5rem] p-10 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)]">
+              <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-2 opacity-60">
+                  <ShoppingBag size={16} />
+                  <span className="text-[9px] font-black uppercase tracking-[0.4em]">Cart Summary</span>
+                </div>
+                <span className="text-[9px] font-bold text-zinc-500">{cart.length} Items</span>
+              </div>
+
+              <div className="space-y-6 mb-12 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                {cart.map((item) => (
+                  <div key={`${item._id}-${item.size}`} className="flex justify-between items-start gap-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest leading-tight">
+                        {item.title}
+                      </p>
+                      <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+                        QTY: {item.quantity} • {item.size} • {item.color}
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold italic">
+                      {formatPrice(item.price * item.quantity, item.currency)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-5 border-t border-zinc-800 pt-8">
+                <div className="flex justify-between text-zinc-500 text-[9px] font-black uppercase tracking-widest">
+                  <span>Shipping</span>
+                  <span className="text-zinc-300 italic">Complementary</span>
+                </div>
+                <div className="flex justify-between items-end pt-2">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Grand Total</span>
+                    <span className="text-4xl font-black tracking-tighter italic">
+                      {formatPrice(total, cart[0]?.currency)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                form="checkout-form"
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full mt-10 py-6 bg-white text-black rounded-full font-black uppercase tracking-[0.3em] text-[10px] hover:bg-zinc-200 transition-all flex items-center justify-center gap-3 disabled:opacity-30 active:scale-95 shadow-xl shadow-white/5"
+              >
+                {isSubmitting ? (
+                  "Finalizing Order..."
+                ) : (
+                  <>
+                    Confirm Order <Truck size={16} />
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

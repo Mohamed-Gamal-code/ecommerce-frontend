@@ -6,13 +6,18 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-export default function Pagination({ currentPage, totalPages, totalProducts }) {
+export default function Pagination({
+  currentPage,
+  totalPages,
+  totalProducts,
+  basePath = "/dashboard/products",
+}) {
   const searchParams = useSearchParams();
 
   const createPageURL = (pageNumber) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", pageNumber.toString());
-    return `/dashboard/products?${params.toString()}`;
+    return `${basePath}?${params.toString()}`;
   };
 
   const isFirstPage = currentPage === 1;

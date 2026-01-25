@@ -13,9 +13,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 export const dynamic = "force-dynamic";
-export default async function ProductsPage() {
-  const productsData = await getAllProducts();
-  const { data: products } = productsData;
+export default async function ProductsPage({ searchParams }) {
+  const page = parseInt(searchParams?.page) || 1;
+  const limit = 10; // يمكن تعديله إذا لزم الأمر
+  const productsData = await getAllProducts(page, limit);
+  const {
+    data: products,
+    totalProducts,
+    totalPages: backendTotalPages,
+  } = productsData;
+  const totalPages = backendTotalPages || Math.ceil(totalProducts / limit);
 
   return (
     <Card>
@@ -34,7 +41,14 @@ export default async function ProductsPage() {
       </CardHeader>
       <CardContent>
         {products && products.length > 0 ? (
-          <ProductsTable products={products} />
+          <>
+            <ProductsTable products={products} />
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalProducts={totalProducts}
+            />
+          </>
         ) : (
           <div className="text-center py-10">
             <p>No products found.</p>

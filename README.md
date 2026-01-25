@@ -1,9 +1,10 @@
 # 🛒 E-Commerce Frontend
 
-A modern, responsive **E-Commerce Frontend application** built with **Next.js**.  
-Designed to deliver a smooth shopping experience with clean UI, scalable structure, and real-world business flows.
+A production-ready **E-Commerce Frontend application** built with **Next.js**, focused on performance, scalability, and real-world shopping flows.
 
-The application consumes a **custom backend API** for authentication, products, cart, orders, and checkout.
+This project delivers a complete customer experience — from browsing products to secure checkout — with a clean UI and responsive design.
+
+The frontend integrates with a **custom RESTful backend API** handling authentication, products, cart, orders, and checkout logic.
 
 ---
 
@@ -13,35 +14,61 @@ The application consumes a **custom backend API** for authentication, products, 
 
 ---
 
-## 🖼️ Screenshots
+## ✨ Project Highlights
 
-### 🖥️ Desktop Showcase (Home Page)
-<p align="center">
-  <img src="./public/screenshots/Discover.jpg" width="100%" alt="Ecommerce Home Page" />
-</p>
+- Production-style frontend architecture
+- Optimized UI/UX for conversion-focused flows
+- Clean separation of components and business logic
+- Built to integrate seamlessly with a scalable backend
 
 ---
 
-### 🛍️ Shopping Experience
+## 🖼️ Screenshots
 
-| 📋 Product Listing | 🔍 Product Details |
-|:---:|:---:|
-| <img src="./public/screenshots/Special.jpg" width="400" alt="Product Listing Page" /> | <img src="./public/screenshots/Featured.jpg" width="400" alt="Product Details Page" /> |
+### 🏠 Homepage – Hero Section
+<img src="./public/screenshots/homepage-hero.png" alt="Homepage Hero Section" />
 
-| 🛒 Checkout & Cart | 📱 Product Preview |
-|:---:|:---:|
-| <img src="./public/screenshots/checkout-page.jpg" width="400" alt="Checkout Page" /> | <img src="./public/screenshots/checkout.jpg" width="400" alt="Product Single View" /> |
+---
+
+### ⭐ Featured Products
+<img src="./public/screenshots/featured-products.png" alt="Featured Products Section" />
+
+---
+
+### 🛍️ All Products
+<img src="./public/screenshots/all-products.png" alt="All Products Page" />
+
+---
+
+### 🗂️ Categories
+<img src="./public/screenshots/categories.png" alt="Categories Page" />
+
+---
+
+### 🛒 Cart
+<img src="./public/screenshots/cart.png" alt="Shopping Cart Page" />
+
+---
+
+### 💳 Checkout
+<img src="./public/screenshots/checkout.png" alt="Checkout Flow Page" />
+
+---
+
+### 📊 Admin Dashboard – Overview
+<img src="./public/screenshots/dashboard-overview.png" alt="Admin Dashboard Overview" />
 
 ---
 
 ## 🚀 Features
 
-- Clean, modern UI built with **Next.js**
-- Product listing & product details pages
-- Shopping cart & checkout flow
+- Modern, responsive UI built with **Next.js**
+- Product listing, filtering, and product details
+- Shopping cart with real-time updates
+- Secure checkout flow
 - Authentication & protected routes
-- Integration with a custom **REST API**
-- Fully responsive (Desktop, Tablet & Mobile)
+- REST API integration for dynamic data
+- Fully responsive across Desktop, Tablet, and Mobile
 
 ---
 
@@ -49,15 +76,15 @@ The application consumes a **custom backend API** for authentication, products, 
 
 - **Next.js**
 - **React**
-- **JavaScript**
+- **TypeScript**
 - **Tailwind CSS**
-- REST API Integration
+- **RESTful APIs**
 
 ---
 
 ## ⚙️ Environment Variables
 
-This project uses a **`.env.local`** file.
+This project uses a **`.env.local`** file for configuration.
 
 ### 📄 `.env.local` example
 

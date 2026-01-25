@@ -1,34 +1,21 @@
 /** @format */
-
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/app/Context/AuthContext";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Upload } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
+import { ArrowLeft, Camera, User, Mail, Lock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
-import { getUser,updateUser } from "@/lib/user";
+import { getUser, updateUser } from "@/lib/user";
 
-const LoadingSpinner = () => (
-  <div className="flex justify-center items-center h-screen">
-    <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
-  </div>
-);
-
-const ErrorDisplay = ({ message }) => (
-  <div className="text-center text-red-500">{message}</div>
-);
-
-export default function EditUserPage({ params }) {
-  const { id } = params; // Correct way to get id from params
+export default function EditUserPage() {
+  const { id } = useParams();
   const { user: authUser, getValidToken, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [formData, setFormData] = useState({ name: "", email: "" });
-  const [role, setRole] = useState("user"); // Separate role state for security
+  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -38,12 +25,10 @@ export default function EditUserPage({ params }) {
   const isOwner = authUser?._id === id;
   const isAdmin = authUser?.role === "admin";
 
-  // 1. Authorization and Data Fetching
   useEffect(() => {
-    if (authLoading) return; // Wait for auth state to be loaded
-
+    if (authLoading) return;
     if (!isOwner && !isAdmin) {
-      toast.error("Access Denied. You are not authorized to edit this user.");
+      toast.error("Access Denied.");
       router.push("/dashboard");
       return;
     }
@@ -53,22 +38,15 @@ export default function EditUserPage({ params }) {
         setLoading(true);
         const userData = await getUser(getValidToken, id);
         if (userData) {
-          setFormData({ name: userData.name, email: userData.email });
-          setRole(userData.role);
-          if (userData.avatar?.url) {
-            setAvatarPreview(userData.avatar.url);
-          }
-        } else {
-          throw new Error("User not found.");
+          setFormData({ name: userData.name, email: userData.email, password: "" });
+          if (userData.avatar?.url) setAvatarPreview(userData.avatar.url);
         }
       } catch (err) {
         setError(err.message);
-        toast.error(err.message);
       } finally {
         setLoading(false);
       }
     };
-
     fetchUserData();
   }, [id, getValidToken, authLoading, isOwner, isAdmin, router]);
 
@@ -77,166 +55,163 @@ export default function EditUserPage({ params }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRoleChange = (e) => {
-    // Only admins can change roles
-    if (isAdmin) {
-      setRole(e.target.value);
-    }
-  };
-
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setAvatarFile(file);
-      // Create a preview URL
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result);
-      };
+      reader.onloadend = () => setAvatarPreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
-  // 2. Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const toastId = toast.loading("Updating user...");
+    const toastId = toast.loading("Updating your profile...");
 
     try {
       const updateData = { ...formData };
-      if (isAdmin) {
-        updateData.role = role;
-      }
-      if (avatarFile) {
-        updateData.avatar = avatarFile;
-      }
+      if (!updateData.password) delete updateData.password;
+      if (avatarFile) updateData.avatar = avatarFile;
 
       await updateUser(getValidToken, id, updateData);
-      
-      toast.success("User updated successfully!", { id: toastId });
+      toast.success("Profile Updated!", { id: toastId });
       router.push(`/dashboard/users/${id}`);
     } catch (err) {
-      toast.error(err.message || "Failed to update user.", { id: toastId });
+      toast.error(err.message || "Update failed", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (loading || authLoading) return <LoadingSpinner />;
-  if (error) return <ErrorDisplay message={error} />;
-  if (!isOwner && !isAdmin) return <ErrorDisplay message="Access Denied" />;
-
+  if (loading || authLoading) return (
+    <div className="h-screen flex items-center justify-center bg-white">
+      <div className="w-12 h-12 border-4 border-zinc-100 border-t-black animate-spin rounded-full" />
+    </div>
+  );
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-zinc-50/30 p-4 md:p-12 font-sans">
       <div className="max-w-2xl mx-auto">
+        
+        {/* Navigation */}
         <Link
           href={`/dashboard/users/${id}`}
-          className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mb-6"
+          className="inline-flex items-center gap-2 text-zinc-400 hover:text-black mb-8 text-[10px] font-black uppercase tracking-[0.3em] transition-all"
         >
-          <ArrowLeft size={20} />
-          Back to User Details
+          <ArrowLeft size={16} /> Back to Details
         </Link>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          <h1 className="text-2xl font-bold mb-6">
-            Edit User: {formData.name}
-          </h1>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Avatar Upload */}
-            <div className="flex items-center gap-4">
-                {avatarPreview && (
+        <div className="bg-white rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] border border-zinc-100 overflow-hidden">
+          
+          <div className="p-8 md:p-12">
+            <h1 className="text-3xl font-black uppercase italic tracking-tighter mb-10 border-b border-zinc-50 pb-6">
+              Account <span className="text-zinc-200 not-italic">Settings.</span>
+            </h1>
+
+            <form onSubmit={handleSubmit} className="space-y-8">
+              
+              {/* Modern Avatar Section - التصميم الجديد للصورة */}
+              <div className="flex justify-center mb-12">
+                <div className="relative group">
+                  {/* الدائرة المحيطة بالصورة بتصميم بوهيمي/مودرن */}
+                  <div className="absolute -inset-2 border border-dashed border-zinc-200 rounded-full animate-[spin_20s_linear_infinite] group-hover:border-black transition-colors" />
+                  
+                  <div className="relative w-32 h-32 md:w-40 md:h-40 bg-zinc-100 rounded-full p-1 border border-white shadow-inner overflow-hidden">
                     <Image
-                    src={avatarPreview}
-                    alt="Avatar preview"
-                    width={80}
-                    height={80}
-                    className="rounded-full object-cover"
+                      src={avatarPreview || "/default-avatar.png"}
+                      alt="Avatar"
+                      fill
+                      className="object-cover rounded-full group-hover:scale-110 transition-transform duration-700"
                     />
-                )}
-                <label htmlFor="avatar" className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                    <Upload size={20} />
-                    <span>Change Avatar</span>
-                </label>
-                <input
-                    type="file"
-                    name="avatar"
-                    id="avatar"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    className="hidden"
-                />
-            </div>
+                    <label
+                      htmlFor="avatar-input"
+                      className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                    >
+                      <Camera className="text-white mb-1" size={24} />
+                      <span className="text-[8px] text-white font-black uppercase tracking-widest">Change</span>
+                    </label>
+                  </div>
+                  
+                  <input type="file" id="avatar-input" className="hidden" onChange={handleAvatarChange} accept="image/*" />
+                </div>
+              </div>
 
-            {/* Name Input */}
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                id="name"
-                value={formData.name}
-                onChange={handleFormChange}
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
+              {/* Form Inputs */}
+              <div className="space-y-6">
+                
+                {/* Full Name */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 flex items-center gap-2 px-1">
+                    <User size={12} /> Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleFormChange}
+                    placeholder="Enter your full name"
+                    className="w-full px-6 py-4 bg-zinc-50 border border-transparent focus:border-zinc-200 focus:bg-white rounded-2xl outline-none transition-all font-medium"
+                    required
+                  />
+                </div>
 
-            {/* Email Input */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                id="email"
-                value={formData.email}
-                onChange={handleFormChange}
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
+                {/* Email Address */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 flex items-center gap-2 px-1">
+                    <Mail size={12} /> Email Address
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleFormChange}
+                    placeholder="email@velocore.com"
+                    className="w-full px-6 py-4 bg-zinc-50 border border-transparent focus:border-zinc-200 focus:bg-white rounded-2xl outline-none transition-all font-medium"
+                    required
+                  />
+                </div>
 
-            {/* Role Select (Admin only) */}
-            <div>
-              <label
-                htmlFor="role"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Role
-              </label>
-              <select
-                name="role"
-                id="role"
-                value={role}
-                onChange={handleRoleChange}
-                disabled={!isAdmin}
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-200 dark:disabled:bg-gray-600"
-              >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
-              {!isAdmin && <p className="text-xs text-gray-500 mt-1">Only administrators can change roles.</p>}
-            </div>
+                {/* Reset Password */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 flex items-center gap-2 px-1">
+                    <Lock size={12} /> Reset Password
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleFormChange}
+                    placeholder="••••••••"
+                    className="w-full px-6 py-4 bg-zinc-50 border border-transparent focus:border-zinc-200 focus:bg-white rounded-2xl outline-none transition-all font-medium"
+                  />
+                  <p className="text-[9px] text-zinc-300 font-bold uppercase tracking-tight px-1">
+                    * Leave empty to keep your current password secure.
+                  </p>
+                </div>
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          </form>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-8">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-5 bg-black text-white rounded-full font-black uppercase tracking-[0.2em] text-[11px] hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-30"
+                >
+                  {isSubmitting ? (
+                    "Processing..."
+                  ) : (
+                    <>
+                      Save Changes <CheckCircle2 size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </form>
+          </div>
         </div>
       </div>
     </div>

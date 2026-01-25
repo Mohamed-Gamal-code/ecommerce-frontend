@@ -2,12 +2,13 @@
 
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/app/Context/AuthContext";
 import { getUser } from "@/lib/user";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Edit } from "lucide-react";
+import { useParams } from "next/navigation";
 
 // Re-using the skeleton and error components for consistency
 const ProfileSkeleton = () => (
@@ -44,8 +45,8 @@ const ProfileError = ({ error }) => (
 );
 
 // This is the new page to display a single user's details for the admin.
-export default function UserDetailPage({ params }) {
-  const { id } = use(params); // Get the user ID from the URL
+export default function UserDetailPage() {
+  const { id } = useParams(); // Get the user ID from the URL
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
