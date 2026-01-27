@@ -66,29 +66,37 @@ const DashboardPage = () => {
       <div className="max-w-[1600px] mx-auto">
         
         {/* --- 1. HEADER --- */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-16">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-black rounded-xl flex items-center justify-center shadow-lg shadow-black/10">
-                <Layers size={18} className="text-white" />
-              </div>
-              <span className="font-black text-2xl tracking-tighter uppercase italic">Velocore.</span>
-            </div>
-            <h1 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.8] text-black">
-              System<br />
-              <span className="text-zinc-200">Dashboard.</span>
-            </h1>
-          </div>
+<header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+  {/* --- الجانب الأيسر --- */}
+  <div className="space-y-3">
+    {/* Velocore تصغير حجم الـ */}
+    <div className="flex items-center gap-2">
+      <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center shadow-md shadow-black/10">
+        <Layers size={16} className="text-white" />
+      </div>
+      <span className="font-black text-xl tracking-tighter uppercase italic text-black">
+        Velocore<span className="text-zinc-400">.</span>
+      </span>
+    </div>
 
-          <div className="flex flex-col items-start md:items-end">
-            <div className="flex items-center gap-3 mb-2 bg-white px-4 py-2 rounded-full border border-zinc-100 shadow-sm">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                Operator: {user?.name?.split(" ")[0]}
-              </span>
-            </div>
-          </div>
-        </header>
+    {/* System Dashboard تصغير حجم الـ */}
+    <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter leading-[0.85] text-black">
+      System<br />
+      <span className="text-zinc-200">Dashboard.</span>
+    </h1>
+  </div>
+
+  {/* --- الجانب الأيمن --- */}
+  <div className="flex flex-col items-start md:items-end gap-3">
+    {/* تصغير حجم الـ Badge */}
+    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-zinc-100 shadow-sm">
+      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+      <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
+        Operator: {user?.name?.split(" ")[0] || "Admin"}
+      </span>
+    </div>
+  </div>
+</header>
 
         {/* --- 2. STATS OVERVIEW --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">

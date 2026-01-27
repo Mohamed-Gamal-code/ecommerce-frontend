@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # 🛒 E-Commerce Frontend
 
 A production-ready **E-Commerce Frontend application** built with **Next.js**, focused on performance, scalability, and real-world shopping flows.
@@ -26,36 +28,43 @@ The frontend integrates with a **custom RESTful backend API** handling authentic
 ## 🖼️ Screenshots
 
 ### 🏠 Homepage – Hero Section
+
 <img src="./public/screenshots/homepage-hero.png" alt="Homepage Hero Section" />
 
 ---
 
 ### ⭐ Featured Products
+
 <img src="./public/screenshots/featured-products.png" alt="Featured Products Section" />
 
 ---
 
 ### 🛍️ All Products
+
 <img src="./public/screenshots/all-products.png" alt="All Products Page" />
 
 ---
 
 ### 🗂️ Categories
+
 <img src="./public/screenshots/categories.png" alt="Categories Page" />
 
 ---
 
 ### 🛒 Cart
+
 <img src="./public/screenshots/cart.png" alt="Shopping Cart Page" />
 
 ---
 
 ### 💳 Checkout
+
 <img src="./public/screenshots/checkout.png" alt="Checkout Flow Page" />
 
 ---
 
 ### 📊 Admin Dashboard – Overview
+
 <img src="./public/screenshots/dashboard-overview.png" alt="Admin Dashboard Overview" />
 
 ---
@@ -92,3 +101,4 @@ Create a file named `.env.local` in the project root:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
+```
